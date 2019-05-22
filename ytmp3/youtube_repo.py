@@ -7,7 +7,7 @@ import traceback
 
 class MyLogger(object):
     def debug(self, msg):
-        pass
+        print(msg)
 
     def warning(self, msg):
         pass
@@ -29,12 +29,17 @@ class YoutubeRepo:
 
     def hook(self, d):
         if d['status'] == 'downloading':
+            filename = d['filename']
             downloaded_bytes = d['downloaded_bytes']
             total_bytes = d['total_bytes']
             percent = 100 * downloaded_bytes / total_bytes
-            print(str(downloaded_bytes) + "/" + str(total_bytes) + " (" + "{0:.2f}".format(percent) + "%)")
+            self.log.debug(
+                str(filename) + " " +
+                str(downloaded_bytes) + "/" + str(total_bytes) +
+                " (" + "{0:.2f}".format(percent) + "%)"
+            )
         if d['status'] == 'finished':
-            print('Downloading finished. Begin processing....')
+            self.log.debug('Downloading finished. Begin processing....')
 
     def __init__(self, download_dir=DEFAULT_DOWNLOAD_DIRECTORY, hooks=None) -> None:
         super().__init__()
@@ -59,7 +64,9 @@ class YoutubeRepo:
 
     def download_yt_video(self, url):
         try:
-            return self.ydl.download(url)
+            res = self.ydl.download(url)
+            self.log.info(str(url) + ": Processing to mp3 finished...")
+            return res
         except youtube_dl.utils.DownloadError:
             self.log.info("Couldn't download message")
             traceback.print_exc()
@@ -70,10 +77,6 @@ class YoutubeRepo:
             raise
 
 
-def main():
+if __name__ == '__main__':
     yr = YoutubeRepo("/home/przemek/PycharmProjects/ytmp3/ytmp3")
     yr.download_yt_video(['https://www.youtube.com/watch?v=62p0ImadtIg'])
-
-
-if __name__ == '__main__':
-    main()
